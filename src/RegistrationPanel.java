@@ -6,51 +6,74 @@ public class RegistrationPanel extends Panel {
     private MovieStreamingApp app;
     private TextField usernameField, emailField;
     private TextField passwordField;
-    private Label messageLabel;
     
     public RegistrationPanel(MovieStreamingApp app) {
         this.app = app;
-        setLayout(new GridLayout(5, 1));
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
         
-        Panel inputPanel = new Panel(new GridLayout(3, 2));
-        inputPanel.add(new Label("Username:"));
+        // Title
+        Label titleLabel = new Label("Create New Account", Label.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        add(titleLabel, gbc);
+        
+        // Username
+        gbc.gridwidth = 1;
+        gbc.gridy = 1;
+        add(new Label("Username:"), gbc);
+        
+        gbc.gridx = 1;
         usernameField = new TextField(20);
-        inputPanel.add(usernameField);
+        add(usernameField, gbc);
         
-        inputPanel.add(new Label("Email:"));
+        // Email
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        add(new Label("Email:"), gbc);
+        
+        gbc.gridx = 1;
         emailField = new TextField(20);
-        inputPanel.add(emailField);
+        add(emailField, gbc);
         
-        inputPanel.add(new Label("Password:"));
+        // Password
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        add(new Label("Password:"), gbc);
+        
+        gbc.gridx = 1;
         passwordField = new TextField(20);
         passwordField.setEchoChar('*');
-        inputPanel.add(passwordField);
+        add(passwordField, gbc);
         
-        add(inputPanel);
-        
-        Panel buttonPanel = new Panel();
+        // Buttons
+        Panel buttonPanel = new Panel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         Button registerButton = new Button("Register");
         registerButton.addActionListener(new RegisterListener());
-        buttonPanel.add(registerButton);
         
         Button backButton = new Button("Back to Login");
         backButton.addActionListener(e -> app.showScreen("LOGIN"));
+        
+        buttonPanel.add(registerButton);
         buttonPanel.add(backButton);
         
-        add(buttonPanel);
-        
-        messageLabel = new Label("", Label.CENTER);
-        add(messageLabel);
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        add(buttonPanel, gbc);
     }
     
     private class RegisterListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            String username = usernameField.getText();
-            String email = emailField.getText();
-            String password = passwordField.getText();
+            String username = usernameField.getText().trim();
+            String email = emailField.getText().trim();
+            String password = passwordField.getText().trim();
             
             if (username.isEmpty() || password.isEmpty()) {
-                messageLabel.setText("Username and password are required");
+                app.showError("Username and password are required");
                 return;
             }
             
@@ -59,10 +82,9 @@ public class RegistrationPanel extends Panel {
                 PreparedStatement checkStmt = app.getConnection().prepareStatement(
                     "SELECT * FROM users WHERE username = ?");
                 checkStmt.setString(1, username);
-                ResultSet rs = checkStmt.executeQuery();
                 
-                if (rs.next()) {
-                    messageLabel.setText("Username already exists");
+                if (checkStmt.executeQuery().next()) {
+                    app.showError("Username already exists");
                     return;
                 }
                 
@@ -71,17 +93,17 @@ public class RegistrationPanel extends Panel {
                     "INSERT INTO users (username, password, email) VALUES (?, ?, ?)");
                 insertStmt.setString(1, username);
                 insertStmt.setString(2, password);
-                insertStmt.setString(3, email);
+                insertStmt.setString(3, email.isEmpty() ? null : email);
                 
-                int rows = insertStmt.executeUpdate();
-                if (rows > 0) {
-                    messageLabel.setText("Registration successful! Please login.");
+                if (insertStmt.executeUpdate() > 0) {
+                    app.showError("Registration successful! Please login.");
                     usernameField.setText("");
                     emailField.setText("");
                     passwordField.setText("");
+                    app.showScreen("LOGIN");
                 }
             } catch (SQLException ex) {
-                messageLabel.setText("Database error: " + ex.getMessage());
+                app.showError("Database error: " + ex.getMessage());
             }
         }
     }

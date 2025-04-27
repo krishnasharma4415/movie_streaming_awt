@@ -5,25 +5,22 @@ import java.sql.*;
 public class MovieStreamingApp extends Frame {
     private CardLayout cardLayout;
     private Panel cardPanel;
-    
-    // Database connection
     private Connection conn;
     
     public MovieStreamingApp() {
         super("Movie Streaming App");
-        setSize(800, 600);
+        setSize(1024, 768);
+        setLocationRelativeTo(null);
         
         // Initialize database
         MovieDatabase.initialize();
         try {
             conn = MovieDatabase.getConnection();
         } catch (SQLException e) {
-            e.printStackTrace();
+            showError("Database connection failed: " + e.getMessage());
         }
         
-        // Setup UI
         setupUI();
-        
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent we) {
                 try {
@@ -41,21 +38,16 @@ public class MovieStreamingApp extends Frame {
         cardLayout = new CardLayout();
         cardPanel = new Panel(cardLayout);
         
-        // Create different screens
-        LoginPanel loginPanel = new LoginPanel(this);
-        RegistrationPanel registrationPanel = new RegistrationPanel(this);
-        MovieListPanel movieListPanel = new MovieListPanel(this);
-        PlayerPanel playerPanel = new PlayerPanel(this);
+        // Create screens
+        cardPanel.add(new LoginPanel(this), "LOGIN");
+        cardPanel.add(new RegistrationPanel(this), "REGISTER");
+        cardPanel.add(new MovieListPanel(this), "MOVIES");
+        cardPanel.add(new PlayerPanel(this), "PLAYER");
         
-        // Add screens to card panel
-        cardPanel.add(loginPanel, "LOGIN");
-        cardPanel.add(registrationPanel, "REGISTER");
-        cardPanel.add(movieListPanel, "MOVIES");
-        cardPanel.add(playerPanel, "PLAYER");
+        // Main layout
+        setLayout(new BorderLayout());
+        add(cardPanel, BorderLayout.CENTER);
         
-        add(cardPanel);
-        
-        // Show login screen first
         showScreen("LOGIN");
     }
     
@@ -67,11 +59,24 @@ public class MovieStreamingApp extends Frame {
         return conn;
     }
     
+    public Panel getCardPanel() {
+        return cardPanel;
+    }
+    
+    public void showError(String message) {
+        Dialog errorDialog = new Dialog(this, "Error", true);
+        errorDialog.setLayout(new FlowLayout());
+        errorDialog.add(new Label(message));
+        Button okButton = new Button("OK");
+        okButton.addActionListener(e -> errorDialog.dispose());
+        errorDialog.add(okButton);
+        errorDialog.setSize(300, 100);
+        errorDialog.setLocationRelativeTo(this);
+        errorDialog.setVisible(true);
+    }
+    
     public static void main(String[] args) {
         MovieStreamingApp app = new MovieStreamingApp();
         app.setVisible(true);
     }
-    public Panel getCardPanel() {
-        return cardPanel;
-    }    
 }

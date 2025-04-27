@@ -12,76 +12,88 @@ public class MovieListPanel extends Panel {
     public MovieListPanel(MovieStreamingApp app) {
         this.app = app;
         setLayout(new BorderLayout());
-        loadMovies();
-        add(new ListPanel(), BorderLayout.CENTER);
         
-        Panel buttonPanel = new Panel();
-        Button backButton = new Button("Logout");
-        backButton.addActionListener(e -> app.showScreen("LOGIN"));
-        buttonPanel.add(backButton);
-        add(buttonPanel, BorderLayout.SOUTH);
+        // Title
+        Label titleLabel = new Label("Available Movies", Label.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        add(titleLabel, BorderLayout.NORTH);
+        
+        // Load movies
+        loadMovies();
+        
+        // Create a scroll pane
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setSize(800, 600);
+        
+        // Movie grid
+        Panel movieGrid = new Panel();
+        movieGrid.setLayout(new GridLayout(0, 3, 15, 15));
+        movieGrid.setBackground(new Color(240, 240, 240));
+        
+        if (movieTitles.isEmpty()) {
+            movieGrid.add(new Label("No movies available", Label.CENTER));
+        } else {
+            for (int i = 0; i < movieTitles.size(); i++) {
+                movieGrid.add(createMovieCard(i));
+            }
+        }
+        
+        // Add the movie grid to the scroll pane
+        scrollPane.add(movieGrid);
+        
+        // Add the scroll pane to the center of the panel
+        add(scrollPane, BorderLayout.CENTER);
+        
+        // Logout button
+        Panel bottomPanel = new Panel(new FlowLayout(FlowLayout.RIGHT));
+        Button logoutButton = new Button("Logout");
+        logoutButton.addActionListener(e -> app.showScreen("LOGIN"));
+        bottomPanel.add(logoutButton);
+        
+        add(bottomPanel, BorderLayout.SOUTH);
     }
     
     private void loadMovies() {
-        try {
-            Statement stmt = app.getConnection().createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT title, file_path FROM movies");
+        try (Statement stmt = app.getConnection().createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT title, file_path FROM movies")) {
             
             while (rs.next()) {
                 movieTitles.add(rs.getString("title"));
                 moviePaths.add(rs.getString("file_path"));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            app.showError("Error loading movies: " + e.getMessage());
         }
     }
     
-    private class ListPanel extends Panel {
-        public ListPanel() {
-            setLayout(new GridLayout(0, 1, 5, 5));
-            
-            for (int i = 0; i < movieTitles.size(); i++) {
-                Panel movieCard = new Panel(new BorderLayout());
-                movieCard.setBackground(Color.LIGHT_GRAY);
-                
-                Panel infoPanel = new Panel(new GridLayout(0, 1));
-                Label titleLabel = new Label(movieTitles.get(i), Label.LEFT);
-                titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
-                infoPanel.add(titleLabel);
-                
-                try {
-                    PreparedStatement stmt = MovieListPanel.this.app.getConnection().prepareStatement(
-                        "SELECT genre, year, duration FROM movies WHERE title = ?");
-                    stmt.setString(1, movieTitles.get(i));
-                    ResultSet rs = stmt.executeQuery();
-                    
-                    if (rs.next()) {
-                        String info = String.format("%s • %d • %d mins", 
-                            rs.getString("genre"),
-                            rs.getInt("year"),
-                            rs.getInt("duration"));
-                        infoPanel.add(new Label(info));
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                
-                movieCard.add(infoPanel, BorderLayout.CENTER);
-                
-                Button playButton = new Button("Play");
-                final int index = i;
-                playButton.addActionListener(e -> {
-                    PlayerPanel player = (PlayerPanel)MovieListPanel.this.app.getCardPanel().getComponent(3);
-                    player.setMovie(moviePaths.get(index));
-                    MovieListPanel.this.app.showScreen("PLAYER");
-                });
-                
-                Panel buttonPanel = new Panel(new FlowLayout(FlowLayout.RIGHT));
-                buttonPanel.add(playButton);
-                movieCard.add(buttonPanel, BorderLayout.EAST);
-                
-                add(movieCard);
-            }
-        }
+    private Panel createMovieCard(int index) {
+        Panel card = new Panel(new BorderLayout(5, 5));
+        card.setBackground(Color.WHITE);
+        card.setPreferredSize(new Dimension(200, 220));
+        
+        // Movie title
+        Label titleLabel = new Label(movieTitles.get(index), Label.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        card.add(titleLabel, BorderLayout.NORTH);
+        
+        // Thumbnail placeholder
+        Panel thumbnail = new Panel();
+        thumbnail.setBackground(new Color(200, 200, 200));
+        thumbnail.setPreferredSize(new Dimension(180, 120));
+        thumbnail.add(new Label("🎬", Label.CENTER));
+        card.add(thumbnail, BorderLayout.CENTER);
+        
+        // Play button
+        Button playButton = new Button("Play Movie");
+        playButton.addActionListener(e -> playMovie(index));
+        card.add(playButton, BorderLayout.SOUTH);
+        
+        return card;
+    }
+    
+    private void playMovie(int index) {
+        PlayerPanel player = (PlayerPanel) app.getCardPanel().getComponent(3);
+        player.setMovie(moviePaths.get(index));
+        app.showScreen("PLAYER");
     }
 }

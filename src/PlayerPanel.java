@@ -3,7 +3,6 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 
 public class PlayerPanel extends Panel {
     private MovieStreamingApp app;
@@ -14,25 +13,34 @@ public class PlayerPanel extends Panel {
         this.app = app;
         setLayout(new BorderLayout());
         
-        // Status label
+        // Status bar
         statusLabel = new Label("", Label.CENTER);
+        statusLabel.setFont(new Font("Arial", Font.BOLD, 16));
         add(statusLabel, BorderLayout.NORTH);
         
-        // Control panel
-        Panel controlPanel = new Panel();
-        Button playButton = new Button("Play");
-        Button backButton = new Button("Back to Movies");
+        // Player area
+        Panel playerArea = new Panel(new BorderLayout());
+        playerArea.setBackground(Color.BLACK);
+        playerArea.add(new Label("Movie Player", Label.CENTER) {{
+            setForeground(Color.WHITE);
+            setFont(new Font("Arial", Font.BOLD, 24));
+        }}, BorderLayout.CENTER);
         
+        add(playerArea, BorderLayout.CENTER);
+        
+        // Controls
+        Panel controlPanel = new Panel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        
+        Button playButton = new Button("Play");
         playButton.addActionListener(e -> playMovie());
+        
+        Button backButton = new Button("Back to Movies");
         backButton.addActionListener(e -> app.showScreen("MOVIES"));
         
         controlPanel.add(playButton);
         controlPanel.add(backButton);
         
         add(controlPanel, BorderLayout.SOUTH);
-        
-        // Player area - just a placeholder in AWT
-        add(new Label("Click Play to watch the movie", Label.CENTER), BorderLayout.CENTER);
     }
     
     public void setMovie(String path) {
@@ -42,31 +50,31 @@ public class PlayerPanel extends Panel {
     
     private void playMovie() {
         if (moviePath == null || moviePath.isEmpty()) {
-            statusLabel.setText("No movie selected");
+            app.showError("No movie selected");
             return;
         }
-
+        
         File movieFile = new File(moviePath);
         if (!movieFile.exists()) {
-            statusLabel.setText("Movie file not found");
+            app.showError("Movie file not found: " + moviePath);
             return;
         }
-
+        
         try {
-            // Try to open with default system player
-            Desktop.getDesktop().open(movieFile);
-            statusLabel.setText("Playing: " + movieFile.getName());
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(movieFile);
+                statusLabel.setText("Playing: " + movieFile.getName());
+            } else {
+                app.showError("Desktop operations not supported on this platform");
+            }
         } catch (IOException e) {
-            statusLabel.setText("Error opening player: " + e.getMessage());
-            e.printStackTrace();
-
+            app.showError("Error opening movie: " + e.getMessage());
+            
             // Fallback: Try to open in browser
             try {
-                URI uri = movieFile.toURI();
-                Desktop.getDesktop().browse(uri);
-            } catch (IOException | UnsupportedOperationException ex) {
-                statusLabel.setText("Couldn't open player or browser");
-                ex.printStackTrace();
+                Desktop.getDesktop().browse(movieFile.toURI());
+            } catch (Exception ex) {
+                app.showError("Failed to open in browser: " + ex.getMessage());
             }
         }
     }

@@ -6,43 +6,66 @@ public class LoginPanel extends Panel {
     private MovieStreamingApp app;
     private TextField usernameField;
     private TextField passwordField;
-    private Label messageLabel;
     
     public LoginPanel(MovieStreamingApp app) {
         this.app = app;
-        setLayout(new GridLayout(4, 1));
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
         
-        Panel inputPanel = new Panel(new GridLayout(2, 2));
-        inputPanel.add(new Label("Username:"));
+        // Title
+        Label titleLabel = new Label("Movie Streaming App", Label.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        add(titleLabel, gbc);
+        
+        // Username
+        gbc.gridwidth = 1;
+        gbc.gridy = 1;
+        add(new Label("Username:"), gbc);
+        
+        gbc.gridx = 1;
         usernameField = new TextField(20);
-        inputPanel.add(usernameField);
+        add(usernameField, gbc);
         
-        inputPanel.add(new Label("Password:"));
+        // Password
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        add(new Label("Password:"), gbc);
+        
+        gbc.gridx = 1;
         passwordField = new TextField(20);
         passwordField.setEchoChar('*');
-        inputPanel.add(passwordField);
+        add(passwordField, gbc);
         
-        add(inputPanel);
-        
-        Panel buttonPanel = new Panel();
+        // Buttons
+        Panel buttonPanel = new Panel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         Button loginButton = new Button("Login");
         loginButton.addActionListener(new LoginListener());
-        buttonPanel.add(loginButton);
         
         Button registerButton = new Button("Register");
         registerButton.addActionListener(e -> app.showScreen("REGISTER"));
+        
+        buttonPanel.add(loginButton);
         buttonPanel.add(registerButton);
         
-        add(buttonPanel);
-        
-        messageLabel = new Label("", Label.CENTER);
-        add(messageLabel);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        add(buttonPanel, gbc);
     }
     
     private class LoginListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            String username = usernameField.getText();
-            String password = passwordField.getText();
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText().trim();
+            
+            if (username.isEmpty() || password.isEmpty()) {
+                app.showError("Please enter both username and password");
+                return;
+            }
             
             try {
                 PreparedStatement stmt = app.getConnection().prepareStatement(
@@ -53,13 +76,12 @@ public class LoginPanel extends Panel {
                 ResultSet rs = stmt.executeQuery();
                 
                 if (rs.next()) {
-                    messageLabel.setText("Login successful!");
                     app.showScreen("MOVIES");
                 } else {
-                    messageLabel.setText("Invalid username or password");
+                    app.showError("Invalid username or password");
                 }
             } catch (SQLException ex) {
-                messageLabel.setText("Database error: " + ex.getMessage());
+                app.showError("Database error: " + ex.getMessage());
             }
         }
     }

@@ -3,38 +3,55 @@ import java.sql.*;
 
 public class AddMovies {
     public static void main(String[] args) {
+        System.out.println("Scanning media folder for MP4 files...");
+        
         try (Connection conn = MovieDatabase.getConnection()) {
             // Clear existing movies (optional)
             Statement clearStmt = conn.createStatement();
             clearStmt.execute("DELETE FROM movies");
-
-            // Scan the media folder for MP4 files
-            File mediaFolder = new File("media");
-            File[] mp4Files = mediaFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".mp4"));
-
-            if (mp4Files != null) {
-                for (File file : mp4Files) {
-                    String title = file.getName().replace(".mp4", ""); // Use file name as title
-                    String filePath = file.getPath();
-                    String genre = "Unknown"; // Default genre
-                    int year = 2025; // Default year
-                    int duration = 120; // Default duration (in minutes)
-
-                    // Insert movie into the database
-                    String sql = "INSERT INTO movies (title, genre, year, file_path, duration, description) VALUES (?, ?, ?, ?, ?, ?)";
-                    PreparedStatement stmt = conn.prepareStatement(sql);
-                    stmt.setString(1, title);
-                    stmt.setString(2, genre);
-                    stmt.setInt(3, year);
-                    stmt.setString(4, filePath);
-                    stmt.setInt(5, duration);
-                    stmt.setString(6, "No description available");
-                    stmt.executeUpdate();
+            
+            // Scan media folder
+            File mediaDir = new File("media");
+            if (!mediaDir.exists()) {
+                System.out.println("Error: 'media' folder not found");
+                return;
+            }
+            
+            File[] mp4Files = mediaDir.listFiles((dir, name) -> 
+                name.toLowerCase().endsWith(".mp4"));
+            
+            if (mp4Files == null || mp4Files.length == 0) {
+                System.out.println("No MP4 files found in media folder");
+                return;
+            }
+            
+            // Add each MP4 file to database
+            for (File file : mp4Files) {
+                String title = file.getName().replace(".mp4", "");
+                String filePath = "media/" + file.getName();
+                
+                // Insert movie
+                String sql = "INSERT INTO movies (title, file_path, genre, year, duration, description) " +
+                            "VALUES (?, ?, ?, ?, ?, ?)";
+                
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, title);
+                    pstmt.setString(2, filePath);
+                    pstmt.setString(3, "Unknown");
+                    pstmt.setInt(4, 2023); // Default year
+                    pstmt.setInt(5, 90);   // Default duration (minutes)
+                    pstmt.setString(6, "No description available");
+                    
+                    pstmt.executeUpdate();
+                    System.out.println("Added: " + title);
                 }
             }
-
-            System.out.println("Movies added successfully from the media folder.");
+            
+            System.out.println("\nSuccessfully added " + mp4Files.length + " movies to database");
+            MovieDatabase.printAllMovies();
+            
         } catch (SQLException e) {
+            System.out.println("Database error: " + e.getMessage());
             e.printStackTrace();
         }
     }

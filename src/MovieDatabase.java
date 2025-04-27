@@ -27,11 +27,28 @@ public class MovieDatabase {
             stmt.execute(sql);
             
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Database initialization error: " + e.getMessage());
         }
     }
     
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL);
+    }
+    
+    public static void printAllMovies() {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM movies")) {
+            
+            System.out.println("\nMovies in database:");
+            while (rs.next()) {
+                System.out.printf("ID: %d, Title: %s, Path: %s%n",
+                    rs.getInt("id"),
+                    rs.getString("title"),
+                    rs.getString("file_path"));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error listing movies: " + e.getMessage());
+        }
     }
 }
