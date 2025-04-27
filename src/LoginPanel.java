@@ -1,244 +1,175 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.*;
 
 public class LoginPanel extends Panel {
     private MovieStreamingApp app;
     private TextField usernameField;
     private TextField passwordField;
-    private Button loginButton;
-    private Button registerButton;
-    private Label errorLabel;
+    private Label statusLabel;
+    private final Color darkGray = new Color(33, 33, 33);
+    private final Color darkYellow = new Color(255, 204, 0);
+    private final Color lightGray = new Color(66, 66, 66);
+    private final Color textColor = new Color(240, 240, 240);
 
     public LoginPanel(MovieStreamingApp app) {
         this.app = app;
-        setLayout(new GridBagLayout());
-        setBackground(new Color(220, 220, 240)); // Light gradient-like background
+        setLayout(new BorderLayout(0, 20));
+        setBackground(darkGray);
 
-        // Main container with rounded corners
-        Panel mainPanel = new Panel(new GridBagLayout()) {
+        // Center panel with login form
+        Panel loginPanel = new Panel() {
             @Override
-            public void paint(Graphics g) {
-                super.paint(g);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+            public Dimension getPreferredSize() {
+                return new Dimension(400, 300);
             }
         };
-        mainPanel.setBackground(Color.WHITE);
-        mainPanel.setPreferredSize(new Dimension(400, 400));
+        loginPanel.setBackground(lightGray);
+        loginPanel.setLayout(new GridBagLayout());
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 15, 10, 15);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // App Logo/Title
-        Label titleLabel = new Label("MOVIE STREAM", Label.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 28));
-        titleLabel.setForeground(new Color(50, 50, 50));
-        gbc.gridwidth = 2;
+        // App title
+        Label titleLabel = new Label("Movie Streaming App", Label.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setForeground(darkYellow);
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.insets = new Insets(30, 15, 30, 15);
-        mainPanel.add(titleLabel, gbc);
+        gbc.gridwidth = 2;
+        gbc.ipady = 20;
+        loginPanel.add(titleLabel, gbc);
 
-        // Username Section
+        // Reset for other components
+        gbc.ipady = 0;
         gbc.gridwidth = 1;
-        gbc.gridy = 1;
-        gbc.insets = new Insets(5, 15, 5, 15);
+
+        // Username
         Label usernameLabel = new Label("Username:", Label.RIGHT);
-        usernameLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        usernameLabel.setForeground(new Color(70, 70, 70));
-        mainPanel.add(usernameLabel, gbc);
+        usernameLabel.setForeground(textColor);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        loginPanel.add(usernameLabel, gbc);
 
-        gbc.gridx = 1;
         usernameField = new TextField(20);
-        usernameField.setFont(new Font("Arial", Font.PLAIN, 14));
-        usernameField.addFocusListener(new FocusHighlighter());
-        mainPanel.add(usernameField, gbc);
+        usernameField.setBackground(new Color(55, 55, 55));
+        usernameField.setForeground(textColor);
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        loginPanel.add(usernameField, gbc);
 
-        // Password Section
+        // Password
+        Label passwordLabel = new Label("Password:", Label.RIGHT);
+        passwordLabel.setForeground(textColor);
         gbc.gridx = 0;
         gbc.gridy = 2;
-        Label passwordLabel = new Label("Password:", Label.RIGHT);
-        passwordLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        passwordLabel.setForeground(new Color(70, 70, 70));
-        mainPanel.add(passwordLabel, gbc);
+        loginPanel.add(passwordLabel, gbc);
 
-        gbc.gridx = 1;
         passwordField = new TextField(20);
-        passwordField.setFont(new Font("Arial", Font.PLAIN, 14));
-        passwordField.setEchoChar('*');
-        passwordField.addFocusListener(new FocusHighlighter());
-        passwordField.addKeyListener(new EnterKeyListener());
-        mainPanel.add(passwordField, gbc);
+        passwordField.setEchoChar('•');
+        passwordField.setBackground(new Color(55, 55, 55));
+        passwordField.setForeground(textColor);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        loginPanel.add(passwordField, gbc);
 
-        // Error Label
+        // Status message
+        statusLabel = new Label("", Label.CENTER);
+        statusLabel.setForeground(Color.RED);
+        statusLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         gbc.gridx = 0;
         gbc.gridy = 3;
         gbc.gridwidth = 2;
-        errorLabel = new Label("", Label.CENTER);
-        errorLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        errorLabel.setForeground(Color.RED);
-        mainPanel.add(errorLabel, gbc);
+        loginPanel.add(statusLabel, gbc);
 
-        // Login Button
-        gbc.gridy = 4;
-        gbc.insets = new Insets(20, 15, 10, 15);
-        loginButton = new Button("LOGIN");
-        styleButton(loginButton, new Color(65, 105, 225));
-        loginButton.addActionListener(new LoginListener());
-        mainPanel.add(loginButton, gbc);
+        // Buttons panel
+        Panel buttonsPanel = new Panel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        buttonsPanel.setBackground(lightGray);
 
-        // Register Link
-        gbc.gridy = 5;
-        gbc.insets = new Insets(5, 15, 20, 15);
-        Panel registerPanel = new Panel(new FlowLayout(FlowLayout.CENTER, 5, 0));
-        Label registerLabel = new Label("Don't have an account?", Label.CENTER);
-        registerLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        registerPanel.add(registerLabel);
+        // Login button
+        Button loginButton = new Button("Login");
+        loginButton.setBackground(darkYellow);
+        loginButton.setForeground(Color.BLACK);
+        loginButton.setFont(new Font("Arial", Font.BOLD, 14));
+        loginButton.setPreferredSize(new Dimension(100, 30));
+        loginButton.addActionListener(e -> login());
 
-        registerButton = new Button("Register");
-        styleLinkButton(registerButton);
+        // Add hover effect
+        loginButton.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                loginButton.setBackground(new Color(255, 215, 50));
+            }
+
+            public void mouseExited(MouseEvent e) {
+                loginButton.setBackground(darkYellow);
+            }
+        });
+
+        buttonsPanel.add(loginButton);
+
+        // Register button
+        Button registerButton = new Button("Register");
+        registerButton.setBackground(lightGray);
+        registerButton.setForeground(textColor);
+        registerButton.setFont(new Font("Arial", Font.BOLD, 14));
+        registerButton.setPreferredSize(new Dimension(100, 30));
         registerButton.addActionListener(e -> app.showScreen("REGISTER"));
-        registerPanel.add(registerButton);
 
-        mainPanel.add(registerPanel, gbc);
-
-        // Add main panel to the center
-        add(mainPanel);
-    }
-
-    private void styleButton(Button button, Color bgColor) {
-        button.setFont(new Font("Arial", Font.BOLD, 14));
-        button.setBackground(bgColor);
-        button.setForeground(Color.WHITE);
-        button.setPreferredSize(new Dimension(120, 35));
-
-        // Hover effect
-        button.addMouseListener(new MouseAdapter() {
+        // Add hover effect
+        registerButton.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
-                button.setBackground(new Color(
-                    Math.min(bgColor.getRed() + 20, 255),
-                    Math.min(bgColor.getGreen() + 20, 255),
-                    Math.min(bgColor.getBlue() + 20, 255)
-                ));
+                registerButton.setBackground(new Color(86, 86, 86));
             }
 
             public void mouseExited(MouseEvent e) {
-                button.setBackground(bgColor);
+                registerButton.setBackground(lightGray);
             }
         });
-    }
 
-    private void styleLinkButton(Button button) {
-        button.setFont(new Font("Arial", Font.BOLD, 12));
-        button.setForeground(new Color(65, 105, 225));
-        button.setBackground(null);
+        buttonsPanel.add(registerButton);
 
-        // Hover effect
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                button.setForeground(new Color(30, 80, 200));
-                button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            }
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        loginPanel.add(buttonsPanel, gbc);
 
-            public void mouseExited(MouseEvent e) {
-                button.setForeground(new Color(65, 105, 225));
-                button.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-            }
-        });
-    }
-
-    private class FocusHighlighter extends FocusAdapter {
-        @Override
-        public void focusGained(FocusEvent e) {
-            Component c = e.getComponent();
-            if (c instanceof TextField) {
-                c.setBackground(new Color(230, 240, 255));
-            }
-        }
-
-        @Override
-        public void focusLost(FocusEvent e) {
-            Component c = e.getComponent();
-            if (c instanceof TextField) {
-                c.setBackground(Color.WHITE);
-            }
-        }
-    }
-
-    private class EnterKeyListener extends KeyAdapter {
-        @Override
-        public void keyPressed(KeyEvent e) {
-            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                loginButton.getActionListeners()[0].actionPerformed(
-                    new ActionEvent(loginButton, ActionEvent.ACTION_PERFORMED, ""));
-            }
-        }
-    }
-
-    private class LoginListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            String username = usernameField.getText().trim();
-            String password = passwordField.getText().trim();
-
-            // Input validation
-            if (username.isEmpty()) {
-                showError("Please enter your username");
-                usernameField.requestFocus();
-                return;
-            }
-
-            if (password.isEmpty()) {
-                showError("Please enter your password");
-                passwordField.requestFocus();
-                return;
-            }
-
-            // Disable buttons during processing
-            loginButton.setEnabled(false);
-            registerButton.setEnabled(false);
-            loginButton.setLabel("Logging in...");
-
-            // Simulate network delay (remove in production)
-            new Thread(() -> {
-                try {
-                    Thread.sleep(500); // Simulate network delay
-
-                    EventQueue.invokeLater(() -> {
-                        try {
-                            PreparedStatement stmt = app.getConnection().prepareStatement(
-                                "SELECT * FROM users WHERE username = ? AND password = ?");
-                            stmt.setString(1, username);
-                            stmt.setString(2, password);
-
-                            ResultSet rs = stmt.executeQuery();
-
-                            if (rs.next()) {
-                                app.showScreen("MOVIES");
-                            } else {
-                                showError("Invalid username or password");
-                                passwordField.setText("");
-                                passwordField.requestFocus();
-                            }
-                        } catch (SQLException ex) {
-                            showError("Database error: " + ex.getMessage());
-                        } finally {
-                            loginButton.setEnabled(true);
-                            registerButton.setEnabled(true);
-                            loginButton.setLabel("LOGIN");
-                        }
-                    });
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
+        // Add key listener for Enter key
+        KeyAdapter enterKeyListener = new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    login();
                 }
-            }).start();
-        }
+            }
+        };
+        usernameField.addKeyListener(enterKeyListener);
+        passwordField.addKeyListener(enterKeyListener);
+
+        // Center the login panel in the screen
+        Panel centerPanel = new Panel(new FlowLayout(FlowLayout.CENTER));
+        centerPanel.setBackground(darkGray);
+        centerPanel.add(loginPanel);
+        add(centerPanel, BorderLayout.CENTER);
+
+        // Bottom panel with note
+        Panel notePanel = new Panel(new FlowLayout(FlowLayout.CENTER));
+        notePanel.setBackground(darkGray);
+        Label noteLabel = new Label("Note: For demo purposes, any username and password will work.", Label.CENTER);
+        noteLabel.setForeground(new Color(150, 150, 150));
+        notePanel.add(noteLabel);
+        add(notePanel, BorderLayout.SOUTH);
     }
 
-    private void showError(String message) {
-        errorLabel.setText(message);
+    private void login() {
+        String username = usernameField.getText().trim();
+        String password = passwordField.getText().trim();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            statusLabel.setText("Please enter username and password");
+            return;
+        }
+
+        // For demo purposes, any username/password works
+        app.showScreen("MOVIES");
     }
 }
