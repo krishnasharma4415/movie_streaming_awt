@@ -328,24 +328,50 @@ public class MovieDatabase {
     }
 
     private static String makeApiCall(String urlStr) throws IOException {
-        URL url = new URL(urlStr);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.setConnectTimeout(5000);
+        int maxRetries = 3;
+        int retryDelayMs = 1000;
 
-        if (conn.getResponseCode() != 200) {
-            throw new IOException("HTTP error code: " + conn.getResponseCode());
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                URL url = new URL(urlStr);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setConnectTimeout(5000);
+                conn.setReadTimeout(5000);
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode == 200) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+                    return response.toString();
+                } else if (responseCode == 429) {
+                    // Rate limit hit, wait and retry
+                    if (attempt < maxRetries) {
+                        Thread.sleep(retryDelayMs * attempt);
+                        continue;
+                    }
+                }
+
+                throw new IOException("HTTP error code: " + responseCode);
+            } catch (Exception e) {
+                if (attempt == maxRetries) {
+                    throw new IOException("Failed after " + maxRetries + " attempts: " + e.getMessage());
+                }
+                try {
+                    Thread.sleep(retryDelayMs * attempt);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Operation interrupted", ie);
+                }
+            }
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        StringBuilder response = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            response.append(line);
-        }
-        reader.close();
-
-        return response.toString();
+        throw new IOException("Failed to make API call after " + maxRetries + " attempts");
     }
 
     private static List<Map<String, Object>> parseMoviesResponse(String jsonResponse) {
