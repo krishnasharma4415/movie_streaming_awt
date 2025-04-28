@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import utils.UserDatabase;
 
 public class LoginPanel extends Panel {
     private MovieStreamingApp app;
@@ -169,7 +170,10 @@ public class LoginPanel extends Panel {
             return;
         }
 
-        // For demo purposes, any username/password works
-        app.showScreen("MOVIES");
+        if (UserDatabase.validateUser(username, password)) {
+            app.showScreen("MOVIES");
+        } else {
+            statusLabel.setText("Invalid username or password");
+        }
     }
 }

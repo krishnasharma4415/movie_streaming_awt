@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import utils.UserDatabase;
 
 public class RegistrationPanel extends Panel {
     private MovieStreamingApp app;
@@ -192,19 +193,39 @@ public class RegistrationPanel extends Panel {
             return;
         }
 
-        // For demo purposes, any valid input works
-        // Show success message
-        statusLabel.setForeground(new Color(0, 200, 0));
-        statusLabel.setText("Registration successful!");
+        // Check if username is taken
+        if (UserDatabase.isUsernameTaken(username)) {
+            statusLabel.setText("Username already taken");
+            return;
+        }
 
-        // Redirect to login after a delay
-        new Thread(() -> {
-            try {
-                Thread.sleep(1500);
-                EventQueue.invokeLater(() -> app.showScreen("LOGIN"));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }).start();
+        // Check if email is taken
+        if (UserDatabase.isEmailTaken(email)) {
+            statusLabel.setText("Email already registered");
+            return;
+        }
+
+        // Register the user
+        if (UserDatabase.registerUser(username, email, password)) {
+            statusLabel.setForeground(new Color(0, 200, 0));
+            statusLabel.setText("Registration successful!");
+
+            // Clear fields
+            usernameField.setText("");
+            emailField.setText("");
+            passwordField.setText("");
+
+            // Redirect to login after a delay
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1500);
+                    app.showScreen("LOGIN");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        } else {
+            statusLabel.setText("Registration failed. Please try again.");
+        }
     }
 }
