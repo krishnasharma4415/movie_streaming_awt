@@ -16,7 +16,6 @@ public class LoginPanel extends Panel {
         setLayout(new BorderLayout(0, 20));
         setBackground(darkGray);
 
-        // Center panel with login form
         Panel loginPanel = new Panel() {
             @Override
             public Dimension getPreferredSize() {
@@ -66,7 +65,7 @@ public class LoginPanel extends Panel {
         loginPanel.add(passwordLabel, gbc);
 
         passwordField = new TextField(20);
-        passwordField.setEchoChar('•');
+        passwordField.setEchoChar('.');
         passwordField.setBackground(new Color(55, 55, 55));
         passwordField.setForeground(textColor);
         gbc.gridx = 1;
@@ -94,7 +93,7 @@ public class LoginPanel extends Panel {
         loginButton.setPreferredSize(new Dimension(100, 30));
         loginButton.addActionListener(e -> login());
 
-        // Add hover effect
+        // hover effect
         loginButton.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 loginButton.setBackground(new Color(255, 215, 50));
@@ -115,7 +114,7 @@ public class LoginPanel extends Panel {
         registerButton.setPreferredSize(new Dimension(100, 30));
         registerButton.addActionListener(e -> app.showScreen("REGISTER"));
 
-        // Add hover effect
+        // hover effect
         registerButton.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 registerButton.setBackground(new Color(86, 86, 86));
@@ -133,7 +132,7 @@ public class LoginPanel extends Panel {
         gbc.gridwidth = 2;
         loginPanel.add(buttonsPanel, gbc);
 
-        // Add key listener for Enter key
+        // key listener for Enter key
         KeyAdapter enterKeyListener = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -145,7 +144,7 @@ public class LoginPanel extends Panel {
         usernameField.addKeyListener(enterKeyListener);
         passwordField.addKeyListener(enterKeyListener);
 
-        // Center the login panel in the screen
+        // login panel in the screen
         Panel centerPanel = new Panel(new FlowLayout(FlowLayout.CENTER));
         centerPanel.setBackground(darkGray);
         centerPanel.add(loginPanel);
@@ -169,7 +168,6 @@ public class LoginPanel extends Panel {
             return;
         }
 
-        // For demo purposes, any username/password works
         app.showScreen("MOVIES");
     }
 }

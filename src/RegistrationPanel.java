@@ -81,7 +81,7 @@ public class RegistrationPanel extends Panel {
         registerPanel.add(passwordLabel, gbc);
 
         passwordField = new TextField(20);
-        passwordField.setEchoChar('•');
+        passwordField.setEchoChar('.');
         passwordField.setBackground(new Color(55, 55, 55));
         passwordField.setForeground(textColor);
         gbc.gridx = 1;

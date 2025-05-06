@@ -3,7 +3,6 @@
 echo "Movie Streaming App Build Script"
 echo "------------------------------"
 
-# Create bin directory if it doesn't exist
 if [ ! -d "bin" ]; then
     mkdir bin
 fi

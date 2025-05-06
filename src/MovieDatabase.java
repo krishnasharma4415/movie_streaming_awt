@@ -31,7 +31,7 @@ public class MovieDatabase {
             JsonObject jsonObject = JsonParser.parseString(response).getAsJsonObject();
             JsonArray genresArray = jsonObject.getAsJsonArray("genres");
 
-            genreMap.clear(); // Clear existing map
+            genreMap.clear(); 
 
             for (JsonElement genreElement : genresArray) {
                 JsonObject genreObj = genreElement.getAsJsonObject();
@@ -79,7 +79,7 @@ public class MovieDatabase {
             urlBuilder.append("/search/movie?api_key=").append(TMDB_API_KEY);
             urlBuilder.append("&query=").append(URLEncoder.encode(query, "UTF-8"));
 
-            // Add additional filters
+            // additional filters
             if (genreId != null) {
                 urlBuilder.append("&with_genres=").append(genreId);
             }
@@ -113,7 +113,7 @@ public class MovieDatabase {
         try {
             StringBuilder urlBuilder = new StringBuilder(TMDB_BASE_URL);
 
-            // Choose endpoint based on sort criteria
+            // endpoint based on sort criteria
             if (sortBy != null) {
                 if (sortBy.equals("popularity.desc")) {
                     urlBuilder.append("/movie/popular");
@@ -130,7 +130,7 @@ public class MovieDatabase {
 
             urlBuilder.append("?api_key=").append(TMDB_API_KEY);
 
-            // Add additional filters
+            // additional filters
             if (genreId != null) {
                 urlBuilder.append("&with_genres=").append(genreId);
             }
@@ -157,7 +157,7 @@ public class MovieDatabase {
             StringBuilder urlBuilder = new StringBuilder(TMDB_BASE_URL);
             urlBuilder.append("/discover/movie?api_key=").append(TMDB_API_KEY);
 
-            // Add filters
+            // filters
             if (genreId != null) {
                 urlBuilder.append("&with_genres=").append(genreId);
             }
@@ -316,7 +316,6 @@ public class MovieDatabase {
     }
 
     public static String getStreamLink(int tmdbId) {
-        // Use vidsrc.to for streaming the movie
         return "https://vidsrc.to/embed/movie/" + tmdbId;
     }
 

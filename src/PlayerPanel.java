@@ -419,7 +419,7 @@ public class PlayerPanel extends Panel {
             g2.fillRect(20, height - 40, progress, 10);
 
             // Draw control buttons
-            String[] controls = { "⏪", "⏯", "⏹", "⏩" };
+            String[] controls = { "<<", ">|", "[]", ">>" };
             int buttonWidth = 30;
             int startX = width / 2 - (controls.length * buttonWidth) / 2;
 

@@ -34,18 +34,14 @@ public class MovieDetailPanel extends Panel {
     public MovieDetailPanel(MovieStreamingApp app, Map<String, Object> movie) {
         this.app = app;
 
-        // If this movie has basic info, try to get full details from API
         if (movie != null && movie.containsKey("tmdb_id")
                 && (!movie.containsKey("cast") || !movie.containsKey("director"))) {
             int tmdbId = ((Number) movie.get("tmdb_id")).intValue();
             Map<String, Object> fullDetails = MovieDatabase.getMovieDetails(tmdbId);
 
-            // Merge the maps, keeping existing data if the API call failed
             if (fullDetails != null && !fullDetails.isEmpty()) {
-                // Preserve tmdb_id in case it wasn't returned
                 fullDetails.putIfAbsent("tmdb_id", tmdbId);
 
-                // Copy over any existing fields not in the new data
                 for (Map.Entry<String, Object> entry : movie.entrySet()) {
                     fullDetails.putIfAbsent(entry.getKey(), entry.getValue());
                 }
@@ -64,17 +60,16 @@ public class MovieDetailPanel extends Panel {
         // Back button at the top
         Panel topPanel = new Panel(new FlowLayout(FlowLayout.LEFT));
         topPanel.setBackground(darkGray);
-        backButton = new Button("← Back to Movies");
+        backButton = new Button("<- Back to Movies");
         backButton.setBackground(lightGray);
         backButton.setForeground(textColor);
         backButton.addActionListener(e -> app.showScreen("MOVIES"));
         topPanel.add(backButton);
         add(topPanel, BorderLayout.NORTH);
 
-        // Start loading the poster image in a separate thread
         loadPosterImage();
 
-        // Create main content panel with movie details
+        // main content panel with movie details
         Panel contentPanel = new Panel(new BorderLayout(20, 20));
         contentPanel.setBackground(darkGray);
 
@@ -83,7 +78,7 @@ public class MovieDetailPanel extends Panel {
         posterPanel.setBackground(darkGray);
         posterPanel.setPreferredSize(new Dimension(300, 450));
 
-        // Use a canvas for drawing the poster
+        // canvas for drawing the poster
         Canvas posterCanvas = new Canvas() {
             @Override
             public void paint(Graphics g) {
@@ -245,7 +240,7 @@ public class MovieDetailPanel extends Panel {
         watchButton.addActionListener(e -> watchMovie());
         buttonPanel.add(watchButton);
 
-        // Trailer button (only shown if trailer available)
+        // Trailer button 
         if (movie.containsKey("trailer_key") && movie.get("trailer_key") != null) {
             trailerButton = new Button("Watch Trailer");
             trailerButton.setBackground(new Color(0, 0, 128));
@@ -255,7 +250,6 @@ public class MovieDetailPanel extends Panel {
             buttonPanel.add(trailerButton);
         }
 
-        // Add all components to the details panel
         detailsPanel.add(titleLabel);
         detailsPanel.add(infoPanel);
         detailsPanel.add(new Label("")); // Spacer
@@ -263,11 +257,9 @@ public class MovieDetailPanel extends Panel {
         detailsPanel.add(new Label("")); // Spacer
         detailsPanel.add(buttonPanel);
 
-        // Add the poster and details to the content panel
         contentPanel.add(posterPanel, BorderLayout.WEST);
         contentPanel.add(detailsPanel, BorderLayout.CENTER);
 
-        // Add padding around the content
         Panel paddingPanel = new Panel(new BorderLayout());
         paddingPanel.setBackground(darkGray);
         paddingPanel.add(contentPanel, BorderLayout.CENTER);
@@ -292,11 +284,10 @@ public class MovieDetailPanel extends Panel {
 
         add(paddingPanel, BorderLayout.CENTER);
 
-        // Add similar movies section at the bottom
+        // similar movies section at the bottom
         setupSimilarMoviesPanel();
         add(similarMoviesPanel, BorderLayout.SOUTH);
 
-        // Load similar movies in a separate thread
         loadSimilarMovies();
     }
 
@@ -476,7 +467,6 @@ public class MovieDetailPanel extends Panel {
                     URL imageUrl = new URL(posterPath);
                     posterImage = app.getToolkit().getImage(imageUrl);
 
-                    // Use MediaTracker to wait for the image to load
                     MediaTracker tracker = new MediaTracker(this);
                     tracker.addImage(posterImage, 0);
                     tracker.waitForID(0);
@@ -492,13 +482,10 @@ public class MovieDetailPanel extends Panel {
 
     private void watchMovie() {
         try {
-            // Get the WebPlayerPanel from the app
             WebPlayerPanel playerPanel = (WebPlayerPanel) app.getCardPanel().getComponent(3);
 
-            // Set the movie to play
             playerPanel.setMovie(movie);
 
-            // Show the player screen
             app.showScreen("PLAYER");
         } catch (Exception e) {
             app.showError("Error starting player: " + e.getMessage());
@@ -515,7 +502,6 @@ public class MovieDetailPanel extends Panel {
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                     Desktop.getDesktop().browse(new URI(trailerUrl));
                 } else {
-                    // Fallback for systems that don't support Desktop
                     Runtime rt = Runtime.getRuntime();
 
                     String os = System.getProperty("os.name").toLowerCase();
@@ -537,7 +523,6 @@ public class MovieDetailPanel extends Panel {
         }
     }
 
-    // Panel to display mini posters for similar movies
     private class MiniPosterPanel extends Panel {
         private Map<String, Object> movie;
         private Image posterImage;
@@ -547,7 +532,6 @@ public class MovieDetailPanel extends Panel {
             this.movie = movie;
             setBackground(new Color(50, 50, 50));
 
-            // Load poster image in a separate thread
             new Thread(() -> {
                 try {
                     String posterPath = (String) movie.get("poster_path");

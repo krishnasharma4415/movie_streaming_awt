@@ -18,5 +18,4 @@ echo ""
 echo "Gson library downloaded successfully to ${OUTPUT_FILE}"
 echo ""
 
-# Make the script executable
 chmod +x download-gson.sh
