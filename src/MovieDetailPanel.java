@@ -221,7 +221,7 @@ public class MovieDetailPanel extends Panel {
         String overview = (String) movie.get("overview");
         if (overview == null || overview.isEmpty())
             overview = "No overview available.";
-        overviewArea = new TextArea(overview, 8, 40, TextArea.SCROLLBARS_VERTICAL_ONLY);
+        overviewArea = new TextArea(overview, 30, 40, TextArea.SCROLLBARS_VERTICAL_ONLY);
         overviewArea.setEditable(false);
         overviewArea.setBackground(lightGray);
         overviewArea.setForeground(textColor);
